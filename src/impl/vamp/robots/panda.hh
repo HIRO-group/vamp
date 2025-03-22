@@ -46,5 +46,10 @@ namespace vamp::robots
         static constexpr auto sphere_fk = panda::sphere_fk<rake>;
 
         static constexpr auto eefk = panda::eefk;
+
+        static void set_joint_limits(const std::array<float, 7>& lower, const std::array<float, 7>& upper) {
+          panda::set_joint_limits(lower, upper);
+      }
+      
     };
 }  // namespace vamp::robots

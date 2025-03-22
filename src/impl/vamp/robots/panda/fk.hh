@@ -11,7 +11,7 @@ namespace vamp::robots::panda
     template <std::size_t rake>
     using ConfigurationBlock = FloatVector<rake, 7>;
 
-    alignas(Configuration::S::Alignment) constexpr std::array<float, 7> s_m_a{
+    alignas(Configuration::S::Alignment) static std::array<float, 7> s_m_a{
         5.9342f,
         3.6652f,
         5.9342f,
@@ -19,7 +19,8 @@ namespace vamp::robots::panda
         5.9342f,
         3.9095999999999997f,
         5.9342f};
-    alignas(Configuration::S::Alignment) constexpr std::array<float, 7> s_a_a{
+
+    alignas(Configuration::S::Alignment) static std::array<float, 7> s_a_a{
         -2.9671f,
         -1.8326f,
         -2.9671f,
@@ -34,6 +35,25 @@ namespace vamp::robots::panda
     inline void scale_configuration(Configuration &q) noexcept
     {
         q = q * s_m + s_a;
+    }
+
+    inline void
+    set_joint_limits(const std::array<float, 7> &lower, const std::array<float, 7> &upper) noexcept
+    {
+        for (std::size_t i = 0; i < 7; ++i)
+        {
+            s_a_a[i] = lower[i];
+            s_m_a[i] = upper[i] - lower[i];
+
+            d_s_a[i] = lower[i];
+            d_m_a[i] = 1.0f / (upper[i] - lower[i]);
+        }
+
+        // Reinitialize the FloatVector objects
+        new (&s_m) Configuration(s_m_a);
+        new (&s_a) Configuration(s_a_a);
+        new (&d_m) Configuration(d_m_a);
+        new (&d_s) Configuration(d_s_a);
     }
 
     alignas(Configuration::S::Alignment) constexpr std::array<float, 7> d_m_a{

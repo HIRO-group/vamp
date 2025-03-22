@@ -4,5 +4,15 @@
 
 void vamp::binding::init_panda(nanobind::module_ &pymodule)
 {
-    vamp::binding::init_robot<vamp::robots::Panda>(pymodule);
+    using namespace nanobind::literals;
+
+    auto submodule = vamp::binding::init_robot<vamp::robots::Panda>(pymodule);
+
+    submodule.def(
+        "set_joint_limits",
+        &vamp::robots::Panda::set_joint_limits,
+        "lower"_a,
+        "upper"_a,
+        "Sets the joint limits for the Panda robot."
+    );
 }

@@ -29,34 +29,17 @@ namespace vamp::robots::panda
         -0.0873f,
         -2.9671f};
 
-    const Configuration s_m(s_m_a);
-    const Configuration s_a(s_a_a);
+    static Configuration s_m(s_m_a);
+    static Configuration s_a(s_a_a);
 
     inline void scale_configuration(Configuration &q) noexcept
     {
         q = q * s_m + s_a;
     }
 
-    inline void
-    set_joint_limits(const std::array<float, 7> &lower, const std::array<float, 7> &upper) noexcept
-    {
-        for (std::size_t i = 0; i < 7; ++i)
-        {
-            s_a_a[i] = lower[i];
-            s_m_a[i] = upper[i] - lower[i];
 
-            d_s_a[i] = lower[i];
-            d_m_a[i] = 1.0f / (upper[i] - lower[i]);
-        }
 
-        // Reinitialize the FloatVector objects
-        new (&s_m) Configuration(s_m_a);
-        new (&s_a) Configuration(s_a_a);
-        new (&d_m) Configuration(d_m_a);
-        new (&d_s) Configuration(d_s_a);
-    }
-
-    alignas(Configuration::S::Alignment) constexpr std::array<float, 7> d_m_a{
+    alignas(Configuration::S::Alignment) static std::array<float, 7> d_m_a{
         0.1685147113342995f,
         0.2728364072901888f,
         0.1685147113342995f,
@@ -64,7 +47,7 @@ namespace vamp::robots::panda
         0.1685147113342995f,
         0.25578064252097404f,
         0.1685147113342995f};
-    alignas(Configuration::S::Alignment) constexpr std::array<float, 7> d_s_a{
+    alignas(Configuration::S::Alignment) static std::array<float, 7> d_s_a{
         -2.9671f,
         -1.8326f,
         -2.9671f,
@@ -73,8 +56,8 @@ namespace vamp::robots::panda
         -0.0873f,
         -2.9671f};
 
-    const Configuration d_m(d_m_a);
-    const Configuration d_s(d_s_a);
+    static Configuration d_m(d_m_a);
+    static Configuration d_s(d_s_a);
 
     inline void descale_configuration(Configuration &q) noexcept
     {
@@ -111,7 +94,23 @@ namespace vamp::robots::panda
     }
 
     constexpr auto n_spheres = 59;
-
+    inline void set_joint_limits(const std::array<float, 7> &lower, const std::array<float, 7> &upper) noexcept
+    {
+        for (std::size_t i = 0; i < 7; ++i)
+        {
+            s_a_a[i] = lower[i];
+            s_m_a[i] = upper[i] - lower[i];
+    
+            d_s_a[i] = lower[i];
+            d_m_a[i] = 1.0f / (upper[i] - lower[i]);
+        }
+    
+        // Use placement new on mutable objects
+        new (static_cast<void*>(&s_m)) Configuration(s_m_a);
+        new (static_cast<void*>(&s_a)) Configuration(s_a_a);
+        new (static_cast<void*>(&d_m)) Configuration(d_m_a);
+        new (static_cast<void*>(&d_s)) Configuration(d_s_a);
+    }
     template <std::size_t rake>
     struct Spheres
     {
